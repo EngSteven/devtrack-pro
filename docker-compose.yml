@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # Base de datos Relacional para usuarios, proyectos y tareas
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: devtrack_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: devtrack_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Base de datos NoSQL para el sistema de métricas y logs
+  mongo-db:
+    image: mongo:6.0
+    container_name: devtrack_mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+# Definimos los volúmenes para que la información persista entre reinicios
+volumes:
+  postgres_data:
+  mongo_data:

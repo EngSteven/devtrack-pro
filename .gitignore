@@ -1,0 +1,33 @@
+# Dependencias de Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Variables de Entorno 
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# Carpetas de compilación (builds)
+dist/
+build/
+out/
+
+# Logs y bases de datos locales
+logs
+*.log
+npm-debug.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Volúmenes de Docker 
+/postgres_data
+/mongo_data
