@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { authService } from '../services/auth.service';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  const navigate = useNavigate();
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -17,7 +19,7 @@ export default function LoginPage() {
       const { access_token } = await authService.login({ email, password });
       
       localStorage.setItem('devtrack_token', access_token);
-      alert('Login successful! Token saved.');
+      navigate('/dashboard');
       
     } catch (err: any) {
       if (err.response?.data?.message) {
