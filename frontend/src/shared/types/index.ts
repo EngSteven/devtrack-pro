@@ -11,4 +11,5 @@ export interface Project {
   description: string;
   status: string;
   createdAt: string;
+  updatedAt: string;
 }
