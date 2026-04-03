@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Organization } from './entities/organization.entity';
@@ -65,6 +65,16 @@ export class OrganizationsService {
     // Actualizamos el nombre y guardamos
     org.name = updateOrganizationDto.name;
     return this.orgRepository.save(org);
+  }
+
+  async remove(id: string) {
+    const org = await this.orgRepository.findOne({ where: { id } });
+    if (!org) {
+      throw new NotFoundException('Organization not found');
+    }
+    // Al borrarla, gracias al onDelete: 'CASCADE' que pusimos, se borrarán todos sus proyectos y membresías automáticamente.
+    await this.orgRepository.remove(org);
+    return { message: 'Organization deleted successfully' };
   }
 
 }

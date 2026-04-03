@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Patch, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Param, UseGuards, Request, Delete } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -34,6 +34,13 @@ export class OrganizationsController {
     @Body() updateOrganizationDto: UpdateOrganizationDto
   ) {
     return this.organizationsService.update(id, updateOrganizationDto);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.OWNER) // Solo el creador puede destruir la empresa
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.organizationsService.remove(id);
   }
 
 }

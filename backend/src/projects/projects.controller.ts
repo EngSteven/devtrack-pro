@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Param, UseGuards, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, UseGuards, Get, Delete, Patch } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 // Importamos nuestras herramientas de seguridad
 import { AuthGuard } from '../auth/auth.guard';
@@ -27,4 +28,35 @@ export class ProjectsController {
   findAll(@Param('id') organizationId: string) {
     return this.projectsService.findAllByOrg(organizationId);
   }
+
+  @Roles(Role.OWNER, Role.ADMIN, Role.MEMBER, Role.VIEWER)
+  @Get(':projectId')
+  findOne(
+    @Param('id') organizationId: string, 
+    @Param('projectId') projectId: string
+  ) {
+    return this.projectsService.findOne(organizationId, projectId);
+  }
+
+  @Roles(Role.OWNER, Role.ADMIN) // Solo Jefes y Admins editan
+  @Patch(':projectId')
+  update(
+    @Param('id') organizationId: string,
+    @Param('projectId') projectId: string,
+    @Body() updateProjectDto: UpdateProjectDto
+  ) {
+    return this.projectsService.update(organizationId, projectId, updateProjectDto);
+  }
+
+  @Roles(Role.OWNER, Role.ADMIN) // Solo Jefes y Admins borran
+  @Delete(':projectId')
+  remove(
+    @Param('id') organizationId: string,
+    @Param('projectId') projectId: string
+  ) {
+    return this.projectsService.remove(organizationId, projectId);
+  }
+
 }
+
+
