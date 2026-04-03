@@ -14,7 +14,7 @@ interface KanbanBoardProps {
 const COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'TODO', title: 'To Do', color: 'bg-slate-100' },
   { id: 'IN_PROGRESS', title: 'In Progress', color: 'bg-blue-50' },
-  { id: 'IN_REVIEW', title: 'In Review', color: 'bg-purple-50' },
+  { id: 'IN_REVIEW', title: 'In Review', color: 'bg-orange-50' },
   { id: 'DONE', title: 'Done', color: 'bg-emerald-50' },
 ];
 
@@ -110,7 +110,7 @@ export default function KanbanBoard({ orgId, projectId, teamMembers }: KanbanBoa
           {COLUMNS.map(column => {
             const columnTasks = getTasksByStatus(column.id);
             return (
-              <div key={column.id} className={`flex-shrink-0 w-80 rounded-2xl flex flex-col max-h-full ${column.color} border border-slate-200/60`}>
+              <div key={column.id} className={`shrink-0 w-80 rounded-2xl flex flex-col max-h-full ${column.color} border border-slate-200/60`}>
                 <div className="p-4 flex justify-between items-center border-b border-slate-200/50">
                   <h3 className="font-bold text-slate-700 text-sm flex items-center gap-2">
                     {column.title} <span className="bg-white/60 text-slate-500 text-xs px-2 py-0.5 rounded-full font-medium">{columnTasks.length}</span>
@@ -120,7 +120,7 @@ export default function KanbanBoard({ orgId, projectId, teamMembers }: KanbanBoa
 
                 <Droppable droppableId={column.id}>
                   {(provided, snapshot) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef} className={`flex-1 p-3 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/50' : ''}`}>
+                    <div {...provided.droppableProps} ref={provided.innerRef} className={`flex-1 p-3 overflow-y-auto space-y-3 min-h-37.5 transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/50' : ''}`}>
                       {columnTasks.map((task, index) => (
                         <Draggable key={task.id} draggableId={task.id} index={index}>
                           {(provided, snapshot) => (
@@ -206,7 +206,7 @@ export default function KanbanBoard({ orgId, projectId, teamMembers }: KanbanBoa
               {/* Columna Derecha: Metadatos */}
               <div className="w-full md:w-64 space-y-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1"><UserIcon className="w-3 h-3"/> Assignee</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 items-center gap-1"><UserIcon className="w-3 h-3"/> Assignee</label>
                   <select value={editFormData.assigneeId} onChange={e => setEditFormData({...editFormData, assigneeId: e.target.value})} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">Unassigned</option>
                     {/* 👇 Mapeamos los miembros del equipo */}
@@ -217,7 +217,7 @@ export default function KanbanBoard({ orgId, projectId, teamMembers }: KanbanBoa
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> Priority</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 items-center gap-1"><AlertCircle className="w-3 h-3"/> Priority</label>
                   <select value={editFormData.priority} onChange={e => setEditFormData({...editFormData, priority: e.target.value})} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -227,7 +227,7 @@ export default function KanbanBoard({ orgId, projectId, teamMembers }: KanbanBoa
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1"><Clock className="w-3 h-3"/> Status</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 items-center gap-1"><Clock className="w-3 h-3"/> Status</label>
                   <select value={editFormData.status} onChange={e => setEditFormData({...editFormData, status: e.target.value})} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="TODO">To Do</option>
                     <option value="IN_PROGRESS">In Progress</option>

@@ -353,7 +353,7 @@ export default function DashboardPage() {
             onBlur={() => setTimeout(() => setIsUserMenuOpen(false), 200)}
             className="w-full flex items-center gap-3 p-2 hover:bg-slate-800 rounded-xl transition-colors group"
           >
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-inner shrink-0">
+            <div className="w-9 h-9 rounded-full bg-linear-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-inner shrink-0">
               U
             </div>
             <div className="flex-1 min-w-0 text-left">
@@ -456,7 +456,7 @@ export default function DashboardPage() {
                   </div>
                   <form onSubmit={handleCreateProject} className="flex flex-col md:flex-row gap-4">
                     <input autoFocus type="text" value={newProjectData.name} onChange={e => setNewProjectData({...newProjectData, name: e.target.value})} placeholder="E.g., Cloud Migration..." className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow" required />
-                    <input type="text" value={newProjectData.description} onChange={e => setNewProjectData({...newProjectData, description: e.target.value})} placeholder="Short description (optional)..." className="flex-[2] px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow" />
+                    <input type="text" value={newProjectData.description} onChange={e => setNewProjectData({...newProjectData, description: e.target.value})} placeholder="Short description (optional)..." className="flex-2 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow" />
                     <button type="submit" className="bg-slate-900 text-white px-8 py-3 rounded-xl font-medium hover:bg-slate-800 transition-colors whitespace-nowrap">Create</button>
                   </form>
                 </div>
@@ -529,7 +529,7 @@ export default function DashboardPage() {
                   <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-3 flex items-center gap-2"><UserPlus className="w-4 h-4" /> Invite new member</h3>
                   <form onSubmit={handleInviteMember} className="flex flex-col sm:flex-row gap-3">
                     <input type="email" placeholder="user@example.com" value={inviteData.email} onChange={(e) => setInviteData({...inviteData, email: e.target.value})} className="flex-1 px-4 py-2.5 rounded-xl border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none" required />
-                    <select value={inviteData.role} onChange={(e) => setInviteData({...inviteData, role: e.target.value})} className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none min-w-[140px]">
+                    <select value={inviteData.role} onChange={(e) => setInviteData({...inviteData, role: e.target.value})} className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none min-w-140px">
                       <option value="ADMIN">Admin</option>
                       <option value="MEMBER">Member</option>
                       <option value="VIEWER">Viewer</option>
@@ -545,7 +545,7 @@ export default function DashboardPage() {
                   {teamMembers.map(member => (
                     <div key={member.membershipId} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-slate-200 bg-white transition-colors">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-bold shadow-inner">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-tr from-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-bold shadow-inner">
                           {member.user.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
