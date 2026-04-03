@@ -1,7 +1,12 @@
-import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Param, UseGuards, Request } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { RolesGuard } from './guards/roles.guard'; 
+import { Roles } from './decorators/roles.decorator'; 
+import { Role } from './enums/role.enum';
 import { AuthGuard } from '../auth/auth.guard'; // Importamos el Guardia de seguridad
+
 
 @UseGuards(AuthGuard) // Al ponerlo aquí arriba, TODAS las rutas de este controlador quedan protegidas
 @Controller('organizations')
@@ -20,4 +25,15 @@ export class OrganizationsController {
     const userId = req.user.sub;
     return this.organizationsService.findAllForUser(userId);
   }
+
+  @UseGuards(RolesGuard) // Activamos el cadenero de roles (el AuthGuard ya está activo a nivel de clase)
+  @Roles(Role.OWNER, Role.ADMIN) // Solo dueños y admins pueden renombrar
+  @Patch(':id') // La URL será PATCH /organizations/:id
+  update(
+    @Param('id') id: string, 
+    @Body() updateOrganizationDto: UpdateOrganizationDto
+  ) {
+    return this.organizationsService.update(id, updateOrganizationDto);
+  }
+
 }

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Organization } from './entities/organization.entity';
 import { Membership } from './entities/membership.entity';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { Role } from './enums/role.enum';
 
 @Injectable()
@@ -53,4 +54,17 @@ export class OrganizationsService {
       myRole: m.role,
     }));
   }
+
+  async update(id: string, updateOrganizationDto: UpdateOrganizationDto) {
+    // Buscamos la organización
+    const org = await this.orgRepository.findOne({ where: { id } });
+    if (!org) {
+      throw new InternalServerErrorException('Organization not found');
+    }
+
+    // Actualizamos el nombre y guardamos
+    org.name = updateOrganizationDto.name;
+    return this.orgRepository.save(org);
+  }
+
 }
