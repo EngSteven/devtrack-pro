@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Membership } from '../../organizations/entities/membership.entity';
 
 @Entity('users') // Esto le dice a TypeORM que la tabla en Postgres se llamará 'users'
 export class User {
@@ -13,6 +14,9 @@ export class User {
 
   @Column()
   name!: string;
+
+  @OneToMany(() => Membership, (membership) => membership.user)
+  memberships!: Membership[];
 
   // Campos de auditoría automáticos (muy solicitados en entornos profesionales)
   @CreateDateColumn({ name: 'created_at' })
