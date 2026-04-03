@@ -1,0 +1,82 @@
+import { create } from 'zustand';
+import type { Task, TaskStatus } from '../../../shared/types';
+import { tasksService } from '../services/tasks.service';
+
+interface TasksState {
+  tasks: Task[];
+  isLoading: boolean;
+  error: string | null;
+  
+  // Acciones
+  fetchTasks: (orgId: string, projectId: string) => Promise<void>;
+  moveTask: (orgId: string, projectId: string, taskId: string, newStatus: TaskStatus) => Promise<void>;
+  addTask: (orgId: string, projectId: string, title: string, description?: string) => Promise<void>;
+  editTask: (orgId: string, projectId: string, taskId: string, data: any) => Promise<void>;
+  removeTask: (orgId: string, projectId: string, taskId: string) => Promise<void>;
+}
+
+export const useTasksStore = create<TasksState>((set, get) => ({
+  tasks: [],
+  isLoading: false,
+  error: null,
+
+  fetchTasks: async (orgId, projectId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const tasks = await tasksService.getTasks(orgId, projectId);
+      set({ tasks, isLoading: false });
+    } catch (error) {
+      set({ error: 'Error al cargar las tareas', isLoading: false });
+    }
+  },
+
+  moveTask: async (orgId, projectId, taskId, newStatus) => {
+    const previousTasks = get().tasks;
+    
+    // 1. UI Optimista: Actualizamos el estado local instantáneamente para que la tarjeta se mueva sin lag
+    set({
+      tasks: previousTasks.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      )
+    });
+
+    try {
+      // 2. Enviamos la petición al backend en segundo plano
+      await tasksService.updateTask(orgId, projectId, taskId, { status: newStatus });
+    } catch (error) {
+      // 3. Si el backend falla, revertimos la tarjeta a su posición original
+      set({ tasks: previousTasks });
+      console.error('Error al mover la tarea');
+    }
+  },
+
+  addTask: async (orgId, projectId, title, description) => {
+    try {
+      const newTask = await tasksService.createTask(orgId, projectId, { title, description, status: 'TODO', priority: 'MEDIUM' });
+      // Añadimos la nueva tarea al principio de la lista actual
+      set({ tasks: [newTask, ...get().tasks] });
+    } catch (error) {
+      console.error('Error al crear la tarea');
+      throw error;
+    }
+  },
+  editTask: async (orgId, projectId, taskId, data) => {
+    try {
+      // Mandamos al backend (incluyendo el assigneeId)
+      const updatedTask = await tasksService.updateTask(orgId, projectId, taskId, data);
+      // Actualizamos la UI con la respuesta real del backend (que ya trae los datos del usuario asignado)
+      set({ tasks: get().tasks.map(task => task.id === taskId ? updatedTask : task) });
+    } catch (error) { throw error; }
+  },
+
+  removeTask: async (orgId, projectId, taskId) => {
+    const previousTasks = get().tasks;
+    set({ tasks: previousTasks.filter(task => task.id !== taskId) });
+    try {
+      await tasksService.deleteTask(orgId, projectId, taskId);
+    } catch (error) {
+      set({ tasks: previousTasks });
+      throw error;
+    }
+  }
+}));

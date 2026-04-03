@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
 import { 
   Plus, Building2, MoreVertical, LayoutTemplate, 
-  Users, CheckSquare, Clock, LogOut, Settings,
-  Edit2, Trash2, X, UserPlus, Shield, Bell, Check, User as UserIcon
+  Users, CheckSquare, Clock, LogOut,
+  Edit2, Trash2, X, UserPlus, Shield, Bell, Check, User as UserIcon, Settings
 } from 'lucide-react';
 import { organizationsService } from '../../organizations/services/organizations.service';
 import { projectsService } from '../../projects/services/projects.service';
 import { teamService } from '../../organizations/services/team.service';
 import type { Organization, Project, TeamMember, Invitation } from '../../../shared/types';
+import KanbanBoard from '../../tasks/components/KanbanBoard';
+import { ChevronLeft } from 'lucide-react'; // Para el botón de regresar
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -32,8 +34,9 @@ export default function DashboardPage() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   
-  // 👇 NUEVO: Estado para el menú de usuario en la esquina inferior izquierda
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
 
   useEffect(() => { 
     loadOrganizations(); 
@@ -44,6 +47,7 @@ export default function DashboardPage() {
     if (activeOrg) {
       loadProjects(activeOrg.id);
       loadTeamMembers(activeOrg.id);
+      setActiveProject(null);
     } 
   }, [activeOrg]);
 
@@ -362,99 +366,142 @@ export default function DashboardPage() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 h-full overflow-y-auto relative">
+      <main className="flex-1 h-full overflow-hidden flex flex-col relative">
         {activeOrg ? (
-          <div className="max-w-6xl mx-auto p-8 md:p-12">
-            
-            <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4 relative z-10">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{activeOrg.name}</h2>
-                  <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wide">
-                    {activeOrg.myRole}
-                  </span>
+          
+          activeProject ? (
+            /* =========================================
+               VISTA 2: TABLERO KANBAN (PROYECTO ACTIVO)
+               ========================================= */
+            <div className="flex flex-col h-full w-full p-8 md:p-10 bg-white">
+              <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4 shrink-0">
+                <div>
+                  <button 
+                    onClick={() => setActiveProject(null)} 
+                    className="flex items-center gap-1 text-sm font-semibold text-slate-400 hover:text-indigo-600 transition-colors mb-2"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Back to Projects
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-extrabold text-slate-900">{activeProject.name}</h2>
+                    <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-md uppercase">Active</span>
+                  </div>
+                  <p className="text-slate-500 text-sm mt-1">{activeProject.description || 'Manage tasks and workflows'}</p>
                 </div>
-                <p className="text-slate-500">Manage your projects and team activity</p>
-              </div>
-              
-              <div className="flex items-center gap-3">
                 
-                <button onClick={() => setIsTeamModalOpen(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                  <Users className="w-5 h-5 text-indigo-500" /> Team
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* Avatares del equipo (decorativo por ahora) */}
+                  <div className="flex -space-x-2 mr-4">
+                    <div className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700">U</div>
+                    <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center"><Plus className="w-4 h-4 text-slate-400" /></div>
+                  </div>
+                  <button className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg"><Settings className="w-5 h-5" /></button>
+                </div>
+              </header>
 
-                {isAdminOrOwner && (
-                  <button onClick={() => setIsCreatingProject(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-95">
-                    <Plus className="w-5 h-5" /> New Project
-                  </button>
-                )}
+              {/* Contenedor del Board */}
+              <div className="flex-1 overflow-hidden min-h-0">
+                <KanbanBoard orgId={activeOrg.id} projectId={activeProject.id} teamMembers={teamMembers} />
+              </div>
+            </div>
+          ) : (
+            /* =========================================
+               VISTA 1: LISTA DE PROYECTOS (Tu código original)
+               ========================================= */
+            <div className="max-w-6xl mx-auto p-8 md:p-12 w-full overflow-y-auto h-full">
+              <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4 relative z-10">
+                {/* ... tu header de ActiveOrg actual ... */}
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{activeOrg.name}</h2>
+                    <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wide">
+                      {activeOrg.myRole}
+                    </span>
+                  </div>
+                  <p className="text-slate-500">Manage your projects and team activity</p>
+                </div>
                 
-                <div className="relative">
-                  <button onClick={() => setIsOrgMenuOpen(!isOrgMenuOpen)} onBlur={() => setTimeout(() => setIsOrgMenuOpen(false), 200)} className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-colors border border-transparent hover:border-slate-300">
-                    <MoreVertical className="w-5 h-5" />
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setIsTeamModalOpen(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                    <Users className="w-5 h-5 text-indigo-500" /> Team
                   </button>
-                  {isOrgMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50 animate-in fade-in slide-in-from-top-2">
-                      {isAdminOrOwner && (
-                        <button onClick={handleRenameOrg} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Edit2 className="w-4 h-4" /> Rename Org</button>
-                      )}
-                      <button onClick={handleLeaveOrg} className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2"><LogOut className="w-4 h-4" /> Leave Organization</button>
-                      {isOwner && (
-                        <button onClick={handleDeleteOrg} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-slate-100 mt-1 pt-2"><Trash2 className="w-4 h-4" /> Delete Org</button>
-                      )}
+
+                  {isAdminOrOwner && (
+                    <button onClick={() => setIsCreatingProject(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-95">
+                      <Plus className="w-5 h-5" /> New Project
+                    </button>
+                  )}
+                  
+                  <div className="relative">
+                    <button onClick={() => setIsOrgMenuOpen(!isOrgMenuOpen)} onBlur={() => setTimeout(() => setIsOrgMenuOpen(false), 200)} className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-colors border border-transparent hover:border-slate-300">
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
+                    {isOrgMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50 animate-in fade-in slide-in-from-top-2">
+                        {isAdminOrOwner && <button onClick={handleRenameOrg} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Edit2 className="w-4 h-4" /> Rename Org</button>}
+                        <button onClick={handleLeaveOrg} className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2"><LogOut className="w-4 h-4" /> Leave Organization</button>
+                        {isOwner && <button onClick={handleDeleteOrg} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-slate-100 mt-1 pt-2"><Trash2 className="w-4 h-4" /> Delete Org</button>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </header>
+
+              {/* Formulario de Proyecto Nuevo */}
+              {isCreatingProject && (
+                <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-xl shadow-indigo-50 mb-10 transform transition-all animate-in fade-in slide-in-from-top-4 relative z-0">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-800">New Project Details</h3>
+                    <button onClick={() => setIsCreatingProject(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+                  </div>
+                  <form onSubmit={handleCreateProject} className="flex flex-col md:flex-row gap-4">
+                    <input autoFocus type="text" value={newProjectData.name} onChange={e => setNewProjectData({...newProjectData, name: e.target.value})} placeholder="E.g., Cloud Migration..." className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow" required />
+                    <input type="text" value={newProjectData.description} onChange={e => setNewProjectData({...newProjectData, description: e.target.value})} placeholder="Short description (optional)..." className="flex-[2] px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow" />
+                    <button type="submit" className="bg-slate-900 text-white px-8 py-3 rounded-xl font-medium hover:bg-slate-800 transition-colors whitespace-nowrap">Create</button>
+                  </form>
+                </div>
+              )}
+
+              {/* Grid de Proyectos */}
+              {projects.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+                  {projects.map(project => (
+                    <div 
+                      key={project.id} 
+                      onClick={() => setActiveProject(project)} // 👈 AQUI HACEMOS CLICK PARA ENTRAR
+                      className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col cursor-pointer relative overflow-hidden"
+                    >
+                      <div className={`absolute top-0 left-0 w-full h-1 ${project.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-slate-300'}`}></div>
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-bold text-lg text-slate-800 group-hover:text-indigo-600 transition-colors">{project.name}</h3>
+                        {isAdminOrOwner && (
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(project.id, project.name); }} className="text-slate-400 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-slate-500 text-sm mb-6 flex-1 line-clamp-2 leading-relaxed">{project.description || 'No detailed description provided.'}</p>
+                      <div className="flex items-center gap-4 text-xs font-medium text-slate-400 mt-auto pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> <span>Team</span></div>
+                        <div className="flex items-center gap-1.5"><CheckSquare className="w-3.5 h-3.5" /> <span>Tasks</span></div>
+                        <div className="flex items-center gap-1.5 ml-auto"><Clock className="w-3.5 h-3.5" /> <span>{new Date(project.updatedAt || project.createdAt).toLocaleDateString()}</span></div>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              ) : (
+                /* ... tu Empty State actual ... */
+                <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-3xl border border-dashed border-slate-300">
+                  <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6"><LayoutTemplate className="w-10 h-10 text-indigo-300" /></div>
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">No projects yet</h3>
+                  <p className="text-slate-500 max-w-sm mb-8">Create your first project to start organizing tasks and collaborating with your team.</p>
+                  {isAdminOrOwner && (
+                    <button onClick={() => setIsCreatingProject(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"><Plus className="w-5 h-5" /> Create my first Project</button>
                   )}
                 </div>
-              </div>
-            </header>
-
-            {isCreatingProject && (
-              <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-xl shadow-indigo-50 mb-10 transform transition-all animate-in fade-in slide-in-from-top-4 relative z-0">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-slate-800">New Project Details</h3>
-                  <button onClick={() => setIsCreatingProject(false)} className="text-slate-400 hover:text-slate-600">✕</button>
-                </div>
-                <form onSubmit={handleCreateProject} className="flex flex-col md:flex-row gap-4">
-                  <input autoFocus type="text" value={newProjectData.name} onChange={e => setNewProjectData({...newProjectData, name: e.target.value})} placeholder="E.g., Cloud Migration..." className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow" required />
-                  <input type="text" value={newProjectData.description} onChange={e => setNewProjectData({...newProjectData, description: e.target.value})} placeholder="Short description (optional)..." className="flex-[2] px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow" />
-                  <button type="submit" className="bg-slate-900 text-white px-8 py-3 rounded-xl font-medium hover:bg-slate-800 transition-colors whitespace-nowrap">Create</button>
-                </form>
-              </div>
-            )}
-
-            {projects.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map(project => (
-                  <div key={project.id} className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col cursor-pointer relative overflow-hidden">
-                    <div className={`absolute top-0 left-0 w-full h-1 ${project.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-slate-300'}`}></div>
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-bold text-lg text-slate-800 group-hover:text-indigo-600 transition-colors">{project.name}</h3>
-                      {isAdminOrOwner && (
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(project.id, project.name); }} className="text-slate-400 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-slate-500 text-sm mb-6 flex-1 line-clamp-2 leading-relaxed">{project.description || 'No detailed description provided.'}</p>
-                    <div className="flex items-center gap-4 text-xs font-medium text-slate-400 mt-auto pt-4 border-t border-slate-100">
-                      <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> <span>0</span></div>
-                      <div className="flex items-center gap-1.5"><CheckSquare className="w-3.5 h-3.5" /> <span>0</span></div>
-                      <div className="flex items-center gap-1.5 ml-auto"><Clock className="w-3.5 h-3.5" /> <span>{new Date(project.updatedAt || project.createdAt).toLocaleDateString()}</span></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-3xl border border-dashed border-slate-300">
-                <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6"><LayoutTemplate className="w-10 h-10 text-indigo-300" /></div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">No projects yet</h3>
-                <p className="text-slate-500 max-w-sm mb-8">Create your first project to start organizing tasks and collaborating with your team.</p>
-                {isAdminOrOwner && (
-                  <button onClick={() => setIsCreatingProject(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"><Plus className="w-5 h-5" /> Create my first Project</button>
-                )}
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )
         ) : (
           <div className="h-full flex flex-col items-center justify-center bg-slate-50">
             <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-4"><Building2 className="w-8 h-8 text-slate-400"/></div>
