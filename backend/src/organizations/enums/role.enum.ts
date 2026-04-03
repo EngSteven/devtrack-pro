@@ -4,3 +4,8 @@ export enum Role {
   MEMBER = 'MEMBER', // Puede crear y mover tareas
   VIEWER = 'VIEWER', // Solo lectura (Ideal para clientes externos)
 }
+
+export enum MembershipStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+}

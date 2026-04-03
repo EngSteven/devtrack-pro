@@ -13,3 +13,24 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface TeamMember {
+  membershipId: string;
+  role: string;
+  joinedAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface Invitation {
+  id: string; // Es el membershipId
+  role: string;
+  status: string;
+  organization: {
+    id: string;
+    name: string;
+  };
+}

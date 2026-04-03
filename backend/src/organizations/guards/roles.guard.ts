@@ -48,6 +48,10 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('You do not belong to this organization');
     }
 
+    if (membership.status !== 'ACTIVE') {
+      throw new ForbiddenException('You must accept the invitation to access this organization');
+    }
+
     const hasRole = requiredRoles.includes(membership.role);
     if (!hasRole) {
       throw new ForbiddenException(`Access denied. Requires one of these roles: ${requiredRoles.join(', ')}`);

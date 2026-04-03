@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Organization } from './organization.entity';
+import { MembershipStatus } from '../enums/role.enum';
 import { Role } from '../enums/role.enum';
 
 @Entity('memberships')
@@ -24,4 +25,7 @@ export class Membership {
 
   @CreateDateColumn({ name: 'joined_at' })
   joinedAt!: Date;
+
+  @Column({ type: 'enum', enum: MembershipStatus, default: MembershipStatus.PENDING })
+  status!: MembershipStatus;
 }

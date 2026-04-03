@@ -16,5 +16,16 @@ export const organizationsService = {
   },
   deleteOrganization: async (id: string): Promise<void> => {
     await api.delete(`/organizations/${id}`);
+  },
+  getMyInvitations: async (): Promise<any[]> => {
+    const response = await api.get('/organizations/me/invitations');
+    return response.data;
+  },
+  respondToInvitation: async (membershipId: string, accept: boolean): Promise<void> => {
+    const action = accept ? 'accept' : 'reject';
+    await api.patch(`/organizations/invitations/${membershipId}/${action}`);
+  },
+  leaveOrganization: async (orgId: string): Promise<void> => {
+    await api.delete(`/organizations/${orgId}/leave`);
   }
 };
