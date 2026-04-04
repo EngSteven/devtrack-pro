@@ -26,10 +26,14 @@ export class ProjectsService {
   }
 
   async findAllByOrg(organizationId: string) {
-    return this.projectRepository.find({
-      where: { organization: { id: organizationId } },
-      order: { createdAt: 'DESC' }, // Los más recientes primero
-    });
+    // Usamos QueryBuilder para hacer un JOIN inteligente y contar
+    return this.projectRepository.createQueryBuilder('project')
+      .leftJoin('project.organization', 'organization')
+      .where('organization.id = :orgId', { orgId: organizationId })
+      // Crea una propiedad "taskCount" al vuelo con el total de tareas
+      .loadRelationCountAndMap('project.taskCount', 'project.tasks') 
+      .orderBy('project.createdAt', 'DESC')
+      .getMany();
   }
 
   async findOne(organizationId: string, projectId: string) {

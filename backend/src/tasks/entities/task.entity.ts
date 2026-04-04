@@ -22,7 +22,7 @@ export class Task {
   @Column({ type: 'enum', enum: TaskPriority, default: TaskPriority.MEDIUM })
   priority!: TaskPriority;
 
-  @ManyToOne(() => Project, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Project, project => project.tasks, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
   project!: Project;
 

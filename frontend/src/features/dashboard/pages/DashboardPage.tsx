@@ -482,9 +482,20 @@ export default function DashboardPage() {
                       </div>
                       <p className="text-slate-500 text-sm mb-6 flex-1 line-clamp-2 leading-relaxed">{project.description || 'No detailed description provided.'}</p>
                       <div className="flex items-center gap-4 text-xs font-medium text-slate-400 mt-auto pt-4 border-t border-slate-100">
-                        <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> <span>Team</span></div>
-                        <div className="flex items-center gap-1.5"><CheckSquare className="w-3.5 h-3.5" /> <span>Tasks</span></div>
-                        <div className="flex items-center gap-1.5 ml-auto"><Clock className="w-3.5 h-3.5" /> <span>{new Date(project.updatedAt || project.createdAt).toLocaleDateString()}</span></div>
+                        {/* Usamos el array de teamMembers que ya tenemos en el estado */}
+                        <div className="flex items-center gap-1.5" title="Team members">
+                          <Users className="w-3.5 h-3.5" /> <span>{teamMembers.length}</span>
+                        </div>
+                        
+                        {/* Usamos el nuevo conteo dinámico de TypeORM */}
+                        <div className="flex items-center gap-1.5" title="Total tasks">
+                          <CheckSquare className="w-3.5 h-3.5" /> <span>{project.taskCount || 0}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5 ml-auto" title="Last updated">
+                          <Clock className="w-3.5 h-3.5" /> 
+                          <span>{new Date(project.updatedAt || project.createdAt).toLocaleDateString()}</span>
+                        </div>
                       </div>
                     </div>
                   ))}

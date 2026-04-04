@@ -12,6 +12,7 @@ export interface Project {
   status: string;
   createdAt: string;
   updatedAt: string;
+  taskCount?: number;
 }
 
 export interface TeamMember {
