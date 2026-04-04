@@ -4,14 +4,15 @@ import { Toaster, toast } from 'react-hot-toast';
 import { 
   Plus, Building2, MoreVertical, LayoutTemplate, 
   Users, CheckSquare, Clock, LogOut,
-  Edit2, Trash2, X, UserPlus, Shield, Bell, Check, User as UserIcon, Settings
+  Edit2, Trash2, X, UserPlus, Shield, Bell, Check, User as UserIcon,
+  ChevronLeft, Activity // 👈 Importamos Activity para el icono de Analytics
 } from 'lucide-react';
 import { organizationsService } from '../../organizations/services/organizations.service';
 import { projectsService } from '../../projects/services/projects.service';
 import { teamService } from '../../organizations/services/team.service';
 import type { Organization, Project, TeamMember, Invitation } from '../../../shared/types';
 import KanbanBoard from '../../tasks/components/KanbanBoard';
-import { ChevronLeft } from 'lucide-react'; // Para el botón de regresar
+import ProjectAnalytics from '../../analytics/components/ProjectAnalytics'; // 👈 Componente de Analytics
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -38,6 +39,9 @@ export default function DashboardPage() {
 
   const [activeProject, setActiveProject] = useState<Project | null>(null);
 
+  // 👇 NUEVO: Estado para manejar qué pestaña del proyecto estamos viendo
+  const [projectTab, setProjectTab] = useState<'board' | 'analytics'>('board');
+
   useEffect(() => { 
     loadOrganizations(); 
     loadInvitations(); 
@@ -48,6 +52,7 @@ export default function DashboardPage() {
       loadProjects(activeOrg.id);
       loadTeamMembers(activeOrg.id);
       setActiveProject(null);
+      setProjectTab('board'); // Reiniciamos a Kanban al cambiar de org
     } 
   }, [activeOrg]);
 
@@ -244,7 +249,6 @@ export default function DashboardPage() {
       {/* SIDEBAR */}
       <aside className="w-64 h-full bg-slate-900 text-slate-300 flex flex-col shrink-0 shadow-xl z-20 border-r border-slate-800">
         
-        {/* 👇 NUEVO HEADER DEL SIDEBAR: Aquí vive ahora la campana global */}
         <div className="p-6 pb-4 shrink-0 flex justify-between items-center relative">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
@@ -265,7 +269,6 @@ export default function DashboardPage() {
               )}
             </button>
 
-            {/* Dropdown de Invitaciones (Ajustado para no salirse del Sidebar) */}
             {isNotificationsOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 py-2 z-50 animate-in fade-in slide-in-from-top-2">
                 <div className="px-4 py-2 border-b border-slate-700 flex justify-between items-center">
@@ -279,7 +282,6 @@ export default function DashboardPage() {
                   <div className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600">
                     {invitations.map(inv => (
                       <div key={inv.id} className="p-4 border-b border-slate-700/50 hover:bg-slate-700 transition-colors">
-                        {/* Texto resumido para que encaje perfecto en w-56 */}
                         <p className="text-xs text-slate-300 mb-3 leading-relaxed">
                           Join <span className="font-bold text-white">{inv.organization.name}</span> as <span className="font-semibold text-indigo-400">{inv.role}</span>.
                         </p>
@@ -325,10 +327,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 👇 NUEVO FOOTER: Menú de Usuario Dinámico */}
+        {/* FOOTER: Menú de Usuario Dinámico */}
         <div className="p-4 border-t border-slate-800 shrink-0 mt-auto bg-slate-900 relative">
-          
-          {/* Popover Menu (Drop-up) */}
           {isUserMenuOpen && (
             <div className="absolute bottom-[calc(100%-10px)] left-4 w-[calc(100%-32px)] bg-slate-800 rounded-xl shadow-2xl border border-slate-700 py-2 z-50 animate-in fade-in slide-in-from-bottom-2">
               <button 
@@ -339,7 +339,7 @@ export default function DashboardPage() {
               </button>
               <div className="h-px bg-slate-700 my-1 mx-2"></div>
               <button 
-                onClick={handleLogout} 
+                onMouseDown={(e) => { e.preventDefault(); handleLogout(); }} 
                 className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-slate-700 flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" /> Log Out
@@ -347,7 +347,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Botón Principal del Perfil */}
           <button 
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             onBlur={() => setTimeout(() => setIsUserMenuOpen(false), 200)}
@@ -371,46 +370,57 @@ export default function DashboardPage() {
           
           activeProject ? (
             /* =========================================
-               VISTA 2: TABLERO KANBAN (PROYECTO ACTIVO)
+               VISTA 2: TABLERO KANBAN Y ANALYTICS (PROYECTO ACTIVO)
                ========================================= */
-            <div className="flex flex-col h-full w-full p-8 md:p-10 bg-white">
-              <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4 shrink-0">
-                <div>
-                  <button 
-                    onClick={() => setActiveProject(null)} 
-                    className="flex items-center gap-1 text-sm font-semibold text-slate-400 hover:text-indigo-600 transition-colors mb-2"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Back to Projects
-                  </button>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-extrabold text-slate-900">{activeProject.name}</h2>
-                    <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-md uppercase">Active</span>
+            <div className="flex flex-col h-full w-full p-8 md:p-10 bg-slate-50/50">
+              <header className="flex flex-col mb-6 shrink-0">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
+                  <div>
+                    <button 
+                      onClick={() => setActiveProject(null)} 
+                      className="flex items-center gap-1 text-sm font-semibold text-slate-400 hover:text-indigo-600 transition-colors mb-2"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Back to Projects
+                    </button>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-2xl font-extrabold text-slate-900">{activeProject.name}</h2>
+                      <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-md uppercase">Active</span>
+                    </div>
                   </div>
-                  <p className="text-slate-500 text-sm mt-1">{activeProject.description || 'Manage tasks and workflows'}</p>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  {/* Avatares del equipo (decorativo por ahora) */}
-                  <div className="flex -space-x-2 mr-4">
-                    <div className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700">U</div>
-                    <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center"><Plus className="w-4 h-4 text-slate-400" /></div>
-                  </div>
-                  <button className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg"><Settings className="w-5 h-5" /></button>
+
+                {/* 👇 Selector de Pestañas (Tabs) */}
+                <div className="flex items-center gap-6 border-b border-slate-200">
+                  <button 
+                    onClick={() => setProjectTab('board')}
+                    className={`pb-3 text-sm font-bold transition-all border-b-2 flex items-center gap-1.5 ${projectTab === 'board' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                  >
+                    <LayoutTemplate className="w-4 h-4" /> Kanban Board
+                  </button>
+                  <button 
+                    onClick={() => setProjectTab('analytics')}
+                    className={`pb-3 text-sm font-bold transition-all border-b-2 flex items-center gap-1.5 ${projectTab === 'analytics' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                  >
+                    <Activity className="w-4 h-4" /> Analytics
+                  </button>
                 </div>
               </header>
 
-              {/* Contenedor del Board */}
+              {/* 👇 Renderizado Condicional del Contenido */}
               <div className="flex-1 overflow-hidden min-h-0">
-                <KanbanBoard orgId={activeOrg.id} projectId={activeProject.id} teamMembers={teamMembers} />
+                {projectTab === 'board' ? (
+                  <KanbanBoard orgId={activeOrg.id} projectId={activeProject.id} teamMembers={teamMembers} />
+                ) : (
+                  <ProjectAnalytics projectId={activeProject.id} />
+                )}
               </div>
             </div>
           ) : (
             /* =========================================
-               VISTA 1: LISTA DE PROYECTOS (Tu código original)
+               VISTA 1: LISTA DE PROYECTOS
                ========================================= */
             <div className="max-w-6xl mx-auto p-8 md:p-12 w-full overflow-y-auto h-full">
               <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4 relative z-10">
-                {/* ... tu header de ActiveOrg actual ... */}
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{activeOrg.name}</h2>
@@ -468,7 +478,10 @@ export default function DashboardPage() {
                   {projects.map(project => (
                     <div 
                       key={project.id} 
-                      onClick={() => setActiveProject(project)} // 👈 AQUI HACEMOS CLICK PARA ENTRAR
+                      onClick={() => {
+                        setActiveProject(project);
+                        setProjectTab('board'); 
+                      }} 
                       className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col cursor-pointer relative overflow-hidden"
                     >
                       <div className={`absolute top-0 left-0 w-full h-1 ${project.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-slate-300'}`}></div>
@@ -482,16 +495,12 @@ export default function DashboardPage() {
                       </div>
                       <p className="text-slate-500 text-sm mb-6 flex-1 line-clamp-2 leading-relaxed">{project.description || 'No detailed description provided.'}</p>
                       <div className="flex items-center gap-4 text-xs font-medium text-slate-400 mt-auto pt-4 border-t border-slate-100">
-                        {/* Usamos el array de teamMembers que ya tenemos en el estado */}
                         <div className="flex items-center gap-1.5" title="Team members">
                           <Users className="w-3.5 h-3.5" /> <span>{teamMembers.length}</span>
                         </div>
-                        
-                        {/* Usamos el nuevo conteo dinámico de TypeORM */}
                         <div className="flex items-center gap-1.5" title="Total tasks">
                           <CheckSquare className="w-3.5 h-3.5" /> <span>{project.taskCount || 0}</span>
                         </div>
-                        
                         <div className="flex items-center gap-1.5 ml-auto" title="Last updated">
                           <Clock className="w-3.5 h-3.5" /> 
                           <span>{new Date(project.updatedAt || project.createdAt).toLocaleDateString()}</span>
@@ -501,7 +510,6 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                /* ... tu Empty State actual ... */
                 <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-3xl border border-dashed border-slate-300">
                   <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6"><LayoutTemplate className="w-10 h-10 text-indigo-300" /></div>
                   <h3 className="text-xl font-bold text-slate-800 mb-2">No projects yet</h3>
@@ -562,15 +570,12 @@ export default function DashboardPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="font-bold text-slate-800">{member.user.name}</p>
-                            {/* Mostramos si la invitación está pendiente basándonos en si tiene la propiedad status (o lo inferimos si fuera necesario, aunque el backend retorna todos. Por simplicidad visual asumimos activos si no hay error) */}
                           </div>
                           <p className="text-sm text-slate-500">{member.user.email}</p>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-3">
-                        
-                        {/* 👇 NUEVO: SELECTOR DE ROLES */}
                         {isAdminOrOwner && member.role !== 'OWNER' ? (
                           <select 
                             value={member.role}
