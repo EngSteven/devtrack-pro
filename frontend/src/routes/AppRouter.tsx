@@ -1,13 +1,15 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '../shared/components/ProtectedRoute';
 import LoginPage from '../features/auth/pages/LoginPage';
-import DashboardPage from '../features/dashboard/pages/DashBoardPage';
+import DashboardPage from '../features/dashboard/pages/DashboardPage';
+import RegisterPage from '../features/auth/pages/RegisterPage';
 
 export default function AppRouter() {
   return (
     <Routes>
       {/* RUTAS PÚBLICAS */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       
       {/* RUTAS PROTEGIDAS (Envueltas por el ProtectedRoute) */}
       <Route element={<ProtectedRoute />}>
