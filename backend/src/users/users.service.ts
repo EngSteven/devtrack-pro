@@ -45,4 +45,13 @@ export class UsersService {
     return { message: 'Account deleted successfully' };
   }
 
+  async update(id: string, updateData: Partial<User>) {
+    await this.userRepository.update(id, updateData);
+    return this.userRepository.findOne({ where: { id } });
+  }
+
+  async findByResetToken(token: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { resetPasswordToken: token } });
+  }
+
 }

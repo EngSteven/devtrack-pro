@@ -1,15 +1,18 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { RegisterDto } from './dto/register.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private mailService: MailService
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -57,4 +60,46 @@ export class AuthService {
       access_token: await this.jwtService.signAsync(payload),
     };
   }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) return { message: 'If that email exists, we have sent a reset link.' };
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expireDate = new Date();
+    expireDate.setHours(expireDate.getHours() + 1);
+
+    await this.usersService.update(user.id, {
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: expireDate,
+    });
+
+    await this.mailService.sendPasswordResetEmail(user.email, resetToken);
+
+    return { message: 'If that email exists, we have sent a reset link.' };
+  }
+
+  // 👇 NUEVO: Validar Token y Cambiar Contraseña
+  async resetPassword(token: string, newPassword: string) {
+    // 1. Buscamos directamente en la base de datos por el token
+    const user = await this.usersService.findByResetToken(token);
+
+    // 2. Validamos existencia y caducidad
+    if (!user) throw new BadRequestException('Invalid or expired reset token');
+    if (new Date() > user.resetPasswordExpires!) throw new BadRequestException('Reset token has expired');
+
+    // 3. Encriptamos la nueva contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // 4. Actualizamos y limpiamos los rastros
+    await this.usersService.update(user.id, {
+      password: hashedPassword,
+      resetPasswordToken: undefined,
+      resetPasswordExpires: undefined,
+    });
+
+    return { message: 'Password has been successfully reset' };
+  }
+
 }
