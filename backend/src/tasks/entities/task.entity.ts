@@ -18,6 +18,9 @@ export class Task {
   @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.TODO })
   status!: TaskStatus;
 
+  @Column({ type: 'float', default: 1000 })
+  position!: number;
+
   // 👇 NUEVA COLUMNA DE PRIORIDAD
   @Column({ type: 'enum', enum: TaskPriority, default: TaskPriority.MEDIUM })
   priority!: TaskPriority;

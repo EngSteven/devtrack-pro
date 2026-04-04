@@ -1,6 +1,7 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { TaskPriority } from '../enums/task-priority.enum';
 import { TaskStatus } from '../enums/task-status.enum';
+import { IsNumber } from 'class-validator';
 
 export class CreateTaskDto {
   @IsString()
@@ -22,4 +23,8 @@ export class CreateTaskDto {
   @IsUUID()
   @IsOptional()
   assigneeId?: string; // Opcional: Para asignar la tarea a alguien de inmediato
+
+  @IsNumber()
+  @IsOptional()
+  position?: number;
 }

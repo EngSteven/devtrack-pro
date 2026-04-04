@@ -60,8 +60,33 @@ export default function KanbanBoard({ orgId, projectId, teamMembers }: KanbanBoa
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
     if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) return;
+
+    const newStatus = destination.droppableId as TaskStatus;
+    
+    // 1. Aislamos las tareas de la columna destino (filtrando la que estamos moviendo si es la misma columna)
+    const destTasks = getTasksByStatus(newStatus).filter(t => t.id !== draggableId);
+    
+    // 2. Calculamos la nueva posición (Float)
+    let newPosition = 1000;
+    
+    if (destTasks.length === 0) {
+      // Si la columna está vacía
+      newPosition = 1000;
+    } else if (destination.index === 0) {
+      // Si la soltaron hasta arriba de todo
+      newPosition = destTasks[0].position / 2;
+    } else if (destination.index >= destTasks.length) {
+      // Si la soltaron hasta abajo de todo
+      newPosition = destTasks[destTasks.length - 1].position + 1000;
+    } else {
+      // Si la soltaron en medio de dos tarjetas
+      const taskAbove = destTasks[destination.index - 1].position;
+      const taskBelow = destTasks[destination.index].position;
+      newPosition = (taskAbove + taskBelow) / 2;
+    }
+
     try {
-      await moveTask(orgId, projectId, draggableId, destination.droppableId as TaskStatus);
+      await moveTask(orgId, projectId, draggableId, newStatus, newPosition);
     } catch (error) { toast.error('Error moving task'); }
   };
 

@@ -9,7 +9,8 @@ interface TasksState {
   
   // Acciones
   fetchTasks: (orgId: string, projectId: string) => Promise<void>;
-  moveTask: (orgId: string, projectId: string, taskId: string, newStatus: TaskStatus) => Promise<void>;
+  // 1. Actualizamos la firma para incluir newPosition
+  moveTask: (orgId: string, projectId: string, taskId: string, newStatus: TaskStatus, newPosition: number) => Promise<void>;
   addTask: (orgId: string, projectId: string, title: string, description?: string) => Promise<void>;
   editTask: (orgId: string, projectId: string, taskId: string, data: any) => Promise<void>;
   removeTask: (orgId: string, projectId: string, taskId: string) => Promise<void>;
@@ -30,21 +31,22 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     }
   },
 
-  moveTask: async (orgId, projectId, taskId, newStatus) => {
+  // 2. Agregamos newPosition a la función
+  moveTask: async (orgId, projectId, taskId, newStatus, newPosition) => {
     const previousTasks = get().tasks;
     
-    // 1. UI Optimista: Actualizamos el estado local instantáneamente para que la tarjeta se mueva sin lag
-    set({
-      tasks: previousTasks.map(task => 
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
-    });
+    // 3. UI Optimista: Cambiamos estado, posición y reordenamos el array completo
+    const updatedTasks = previousTasks.map(task => 
+      task.id === taskId ? { ...task, status: newStatus, position: newPosition } : task
+    ).sort((a, b) => a.position - b.position);
+
+    set({ tasks: updatedTasks });
 
     try {
-      // 2. Enviamos la petición al backend en segundo plano
-      await tasksService.updateTask(orgId, projectId, taskId, { status: newStatus });
+      // 4. Enviamos la petición al backend en segundo plano con la nueva posición
+      await tasksService.updateTask(orgId, projectId, taskId, { status: newStatus, position: newPosition });
     } catch (error) {
-      // 3. Si el backend falla, revertimos la tarjeta a su posición original
+      // Si el backend falla, revertimos la tarjeta a su posición original
       set({ tasks: previousTasks });
       console.error('Error al mover la tarea');
     }
@@ -60,6 +62,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       throw error;
     }
   },
+
   editTask: async (orgId, projectId, taskId, data) => {
     try {
       // Mandamos al backend (incluyendo el assigneeId)

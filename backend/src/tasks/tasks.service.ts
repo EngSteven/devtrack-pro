@@ -29,7 +29,7 @@ export class TasksService {
     return this.taskRepository.find({
       where: { project: { id: projectId } },
       relations: ['assignee'], // Traemos los datos del usuario asignado para mostrar su avatar
-      order: { createdAt: 'DESC' },
+      order: { position: 'ASC', createdAt: 'DESC' }, // Ordenamos por posición y luego por fecha de creación
     });
   }
 
