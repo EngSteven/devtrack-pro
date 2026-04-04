@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -26,13 +26,23 @@ export class UsersService {
   async findById(id: string) {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) return null;
-    const { password, ...result } = user; // 👈 Excluimos la contraseña por seguridad
+    const { password, ...result } = user; // Excluimos la contraseña por seguridad
     return result;
   }
 
   async updateProfile(id: string, updateData: { name?: string }) {
     await this.userRepository.update(id, updateData);
     return this.findById(id);
+  }
+
+  async remove(id: string) {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    
+    // Al borrar al usuario, TypeORM ejecutará el "ON DELETE CASCADE" 
+    // y limpiará sus membresías y tareas asignadas (si lo configuraste así).
+    await this.userRepository.delete(id);
+    return { message: 'Account deleted successfully' };
   }
 
 }

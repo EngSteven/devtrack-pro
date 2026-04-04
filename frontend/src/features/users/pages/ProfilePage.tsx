@@ -45,6 +45,33 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const confirm1 = window.confirm('⚠️ Are you absolutely sure you want to delete your account? This action cannot be undone.');
+    if (!confirm1) return;
+    
+    // Doble confirmación de seguridad
+    const confirm2 = window.prompt('Please type "DELETE" to confirm account deletion:');
+    if (confirm2 !== 'DELETE') {
+      if (confirm2 !== null) toast.error('Deletion cancelled. Text did not match.');
+      return;
+    }
+
+    setIsSaving(true);
+    const loadingToast = toast.loading('Deleting account...');
+    try {
+      await usersService.deleteAccount();
+      // Limpiamos el token para cerrar sesión
+      localStorage.removeItem('devtrack_token');
+      toast.success('Account deleted successfully', { id: loadingToast });
+      
+      // Lo mandamos de vuelta al login
+      navigate('/login');
+    } catch (error) {
+      toast.error('Error deleting account', { id: loadingToast });
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Loader2 className="w-8 h-8 text-indigo-600 animate-spin" /></div>;
   }
@@ -151,11 +178,16 @@ export default function ProfilePage() {
               </form>
             </div>
 
-            {/* Danger Zone (Futuro) */}
+            {/* Danger Zone */}
             <div className="bg-red-50 rounded-2xl border border-red-100 p-6">
               <h3 className="text-red-800 font-bold mb-2">Danger Zone</h3>
               <p className="text-red-600/80 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-              <button type="button" className="px-4 py-2 bg-white border border-red-200 text-red-600 text-sm font-bold rounded-lg shadow-sm hover:bg-red-100 transition-colors">
+              <button 
+                type="button" 
+                onClick={handleDeleteAccount} 
+                disabled={isSaving}
+                className="px-4 py-2 bg-white border border-red-200 text-red-600 text-sm font-bold rounded-lg shadow-sm hover:bg-red-100 transition-colors disabled:opacity-50"
+              >
                 Delete Account
               </button>
             </div>

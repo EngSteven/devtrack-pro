@@ -9,5 +9,10 @@ export const usersService = {
   updateProfile: async (data: { name: string }) => {
     const response = await api.patch('/users/me', data);
     return response.data;
+  },
+  
+  deleteAccount: async () => {
+    await api.delete('/users/me');
   }
+  
 };
