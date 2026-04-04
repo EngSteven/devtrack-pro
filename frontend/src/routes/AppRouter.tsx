@@ -3,6 +3,7 @@ import ProtectedRoute from '../shared/components/ProtectedRoute';
 import LoginPage from '../features/auth/pages/LoginPage';
 import DashboardPage from '../features/dashboard/pages/DashboardPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
+import ProfilePage from '../features/users/pages/ProfilePage';
 
 export default function AppRouter() {
   return (
@@ -15,6 +16,7 @@ export default function AppRouter() {
       <Route element={<ProtectedRoute />}>
         {/* Todo lo que esté aquí adentro requiere el JWT */}
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         
   
       </Route>

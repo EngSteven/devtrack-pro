@@ -332,7 +332,7 @@ export default function DashboardPage() {
           {isUserMenuOpen && (
             <div className="absolute bottom-[calc(100%-10px)] left-4 w-[calc(100%-32px)] bg-slate-800 rounded-xl shadow-2xl border border-slate-700 py-2 z-50 animate-in fade-in slide-in-from-bottom-2">
               <button 
-                onClick={() => { setIsUserMenuOpen(false); /* Lógica futura de perfil */ }} 
+                onMouseDown={(e) => { e.preventDefault(); navigate('/profile'); }} 
                 className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700 flex items-center gap-2"
               >
                 <UserIcon className="w-4 h-4" /> Profile & Settings

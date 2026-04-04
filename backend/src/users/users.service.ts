@@ -23,4 +23,16 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
+  async findById(id: string) {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) return null;
+    const { password, ...result } = user; // 👈 Excluimos la contraseña por seguridad
+    return result;
+  }
+
+  async updateProfile(id: string, updateData: { name?: string }) {
+    await this.userRepository.update(id, updateData);
+    return this.findById(id);
+  }
+
 }
