@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { TasksModule } from './tasks/tasks.module';
     ProjectsModule,
 
     TasksModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { AnalyticsService } from 'src/analytics/analytics.service';
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(Task)
     private taskRepository: Repository<Task>,
+    private analyticsService: AnalyticsService,
   ) {}
 
   async create(projectId: string, createTaskDto: CreateTaskDto) {
@@ -37,6 +39,8 @@ export class TasksService {
     const task = await this.taskRepository.findOne({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Task not found');
 
+    const previousStatus = task.status;
+
     const { assigneeId, ...taskData } = updateTaskDto;
     
     Object.assign(task, taskData);
@@ -51,8 +55,29 @@ export class TasksService {
     // 2. Volvemos a buscar la tarea incluyendo las relaciones completas
     const updatedTask = await this.taskRepository.findOne({
       where: { id: taskId },
-      relations: ['assignee'],
+      relations: ['assignee', 'project', 'project.organization'],
     });
+
+    if (!updatedTask) {
+      throw new NotFoundException('Task not found after update');
+    }
+
+    if (updateTaskDto.status && updateTaskDto.status !== previousStatus) {
+      // Ejecutamos en segundo plano (sin await) para no penalizar la velocidad de la petición HTTP
+      this.analyticsService.logEvent({
+        orgId: updatedTask.project.organization.id, // Asegúrate de que TypeORM esté trayendo esta relación
+        projectId: updatedTask.project.id,
+        userId: updatedTask.assignee?.id,
+        action: updatedTask.status === 'DONE' ? 'TASK_COMPLETED' : 'TASK_MOVED',
+        metadata: {
+          taskId: updatedTask.id,
+          taskTitle: updatedTask.title,
+          fromStatus: previousStatus,
+          toStatus: updatedTask.status,
+          timeToComplete: updatedTask.status === 'DONE' ? (new Date().getTime() - new Date(updatedTask.createdAt).getTime()) : null
+        }
+      });
+    }
 
     return updatedTask;
   }
