@@ -31,3 +31,7 @@ pids
 # Volúmenes de Docker 
 /postgres_data
 /mongo_data
+
+
+#ignorar coverage
+coverage/

@@ -79,7 +79,7 @@ export class AuthService {
     return { message: 'If that email exists, we have sent a reset link.' };
   }
 
-  // 👇 NUEVO: Validar Token y Cambiar Contraseña
+  // Validar Token y Cambiar Contraseña
   async resetPassword(token: string, newPassword: string) {
     // 1. Buscamos directamente en la base de datos por el token
     const user = await this.usersService.findByResetToken(token);
