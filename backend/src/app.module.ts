@@ -22,16 +22,29 @@ import { AnalyticsModule } from './analytics/analytics.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('POSTGRES_HOST'),
-        port: configService.get<number>('POSTGRES_PORT'),
-        username: configService.get<string>('POSTGRES_USER'),
-        password: configService.get<string>('POSTGRES_PASSWORD'),
-        database: configService.get<string>('POSTGRES_DB'),
-        autoLoadEntities: true, // Carga las entidades automáticamente
-        synchronize: true, // SOLO PARA DESARROLLO: Crea/actualiza tablas basado en tus modelos
-      }),
+      useFactory: (configService: ConfigService) => {
+        // Obtenemos la URL de la nube si existe
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+
+        return {
+          type: 'postgres',
+          // 1. Priorizamos la URL completa si estamos en Render/Neon
+          url: databaseUrl,
+          
+          // 2. Fallback: Si no hay URL (en local), usamos las variables individuales
+          host: configService.get<string>('POSTGRES_HOST'),
+          port: configService.get<number>('POSTGRES_PORT') || 5432,
+          username: configService.get<string>('POSTGRES_USER'),
+          password: configService.get<string>('POSTGRES_PASSWORD'),
+          database: configService.get<string>('POSTGRES_DB'),
+          
+          autoLoadEntities: true,
+          synchronize: true, 
+          
+          // 3. SSL dinámico: Solo se activa si detectamos DATABASE_URL (entorno de nube)
+          ssl: databaseUrl ? { rejectUnauthorized: false } : false,
+        };
+      },
     }),
 
     // 3. Conexión asíncrona a MongoDB usando Mongoose
