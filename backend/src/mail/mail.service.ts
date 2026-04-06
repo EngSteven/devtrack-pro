@@ -8,16 +8,13 @@ export class MailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465, // El puerto seguro oficial de Gmail
-      secure: true, // true significa que usaremos SSL desde el inicio de la conexión
+      port: 587, 
+      secure: false, 
+      requireTLS: true, 
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
-      // Añadimos esto para evitar que conexiones inactivas se queden colgadas en Render
-      tls: {
-        rejectUnauthorized: false
-      }
     });
   }
 
