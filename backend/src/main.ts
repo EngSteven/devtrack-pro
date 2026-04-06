@@ -5,19 +5,26 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Configuramos CORS para que acepte localhost (desarrollo) y URL de Vercel (producción)
+  const allowedOrigins = [
+    'http://localhost:5173',
+    process.env.FRONTEND_URL, 
+  ].filter(Boolean); // Filtramos nulos por si acaso
+
   app.enableCors({
-    origin: 'http://localhost:5173', // Solo aceptamos peticiones de este origen
+    origin: allowedOrigins,
     credentials: true,
   });
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Filtra las propiedades que no estén definidas en el DTO
-      forbidNonWhitelisted: true, // Lanza error si envían propiedades extra (seguridad extra)
-      transform: true, // Transforma automáticamente los tipos de datos (ej. string a number)
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  // Render asigna dinámicamente el PORT, en tu PC usará el 3000
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
