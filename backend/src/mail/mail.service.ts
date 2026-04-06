@@ -16,6 +16,13 @@ export class MailService {
         pass: process.env.EMAIL_PASS,
       },
     });
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error('❌ ERROR CRÍTICO SMTP EN RENDER:', error);
+      } else {
+        console.log('✅ CONEXIÓN SMTP ESTABLECIDA. Listo para enviar correos.');
+      }
+    });
   }
 
   async sendPasswordResetEmail(to: string, token: string) {
